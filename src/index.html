@@ -6,6 +6,16 @@
     <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
+    <div class="user-information" id=" user-info">
+        <form id="login-form">
+            <input type="text" id="username-input" placeholder="请输入用户名" required>
+            <button type="submit">登录</button>
+        </form>
+        <div id="welcome" style="display:none;">
+            <span>欢迎，<span id="current-username"></span>！</span>
+            <button id="logout-btn">退出登录</button>
+        </div>
+    </div>
     <div class="comment-box">
         <h2>评论区</h2>
         <form id="comment-form">
