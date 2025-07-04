@@ -1,0 +1,9 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "Ricaey",
+    "password": "5postgred@mima",
+    "dbname": "fresher"
+  }
+}
