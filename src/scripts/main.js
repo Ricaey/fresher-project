@@ -1,4 +1,4 @@
-r'rrrconst API_HOST = 'http://localhost:3000'; // 替换为你的实际host
+const API_HOST = 'http://localhost:8080'; // 替换为你的实际host
 
 document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
