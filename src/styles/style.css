@@ -121,6 +121,10 @@ body {
 .comment-text {
     color: #555;
     margin-left: 2px;
+    word-break: break-all;      /* 长单词或长中文自动换行 */
+    white-space: pre-wrap;      /* 保留换行和空格，自动换行 */
+    max-width: 100%;            /* 不超出父容器 */
+    overflow-wrap: break-word;  /* 防止超长单词撑破容器 */
 }
 
 .delete-btn {

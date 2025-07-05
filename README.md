@@ -1,51 +1,27 @@
 # 评论区网页项目
 
-该项目是一个简单的评论区网页示例，允许用户提交评论并查看其他用户的评论。
+该项目是一个简单的评论区网页，允许用户提交评论并查看其他用户的评论。
 
 ## 项目结构
 
 ```
-comment-section-web
+fresher-project
+├── config.json                    # 数据库配置
+├── rear
+│   ├── main.go                    # Go 后端入口
+│   ├── server.go                  # Go 后端接口实现
+│   └── db
+│       ├── init.go                # 数据库初始化
+│       └── model.go               # 数据库模型
+│   └── go.mod                     # Go module 配置
+│   └── go.sum                     # Go module 依赖锁定
 ├── src
-│   ├── index.html        # 网页的主结构，包含评论区的HTML元素和基本布局
+│   ├── index.html                 # 前端主页面
 │   ├── styles
-│   │   └── style.css     # 网页的样式定义，设置评论区的外观
+│   │   └── style.css              # 前端样式
 │   ├── scripts
-│   │   └── main.js       # 实现评论区功能的JavaScript代码
-│   └── assets             # 存放项目相关的静态资源
-├── package.json           # npm的配置文件，列出项目的依赖项和脚本
-└── README.md              # 项目的文档
+│   │   └── main.js                # 前端逻辑
+│   └── assets                     # 静态资源（可为空）
+├── .gitignore                     # Git 忽略文件
+└── README.md                      # 项目说明文档
 ```
-
-## 功能
-
-- 用户可以输入评论并提交
-- 提交的评论会显示在评论区中
-- 评论区支持多条评论的显示
-
-## 使用方法
-
-1. 克隆该项目到本地：
-   ```
-   git clone <repository-url>
-   ```
-
-2. 进入项目目录：
-   ```
-   cd comment-section-web
-   ```
-
-3. 安装依赖：
-   ```
-   npm install
-   ```
-
-4. 打开 `src/index.html` 文件在浏览器中查看评论区功能。
-
-## 贡献
-
-欢迎任何形式的贡献！请提交问题或拉取请求。
-
-## 许可证
-
-该项目使用 MIT 许可证。

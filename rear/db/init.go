@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -13,7 +13,7 @@ var DB *gorm.DB
 
 // 读取 config.json 并返回 DSN
 func getDSNFromConfig() (string, error) {
-	type pgConfig struct {
+	type myConfig struct {
 		Host     string `json:"host"`
 		Port     int    `json:"port"`
 		User     string `json:"user"`
@@ -21,9 +21,9 @@ func getDSNFromConfig() (string, error) {
 		DBName   string `json:"dbname"`
 	}
 	type config struct {
-		Database pgConfig `json:"database"`
+		Database myConfig `json:"database"`
 	}
-	f, err := os.Open("../config/config.json")
+	f, err := os.Open("../config.json")
 	if err != nil {
 		return "", err
 	}
@@ -32,8 +32,8 @@ func getDSNFromConfig() (string, error) {
 	if err := json.NewDecoder(f).Decode(&cfg); err != nil {
 		return "", err
 	}
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Database.Host, cfg.Database.Port, cfg.Database.User, cfg.Database.Password, cfg.Database.DBName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.DBName)
 	return dsn, nil
 }
 
@@ -43,12 +43,12 @@ func InitDB() error {
 	if err != nil {
 		return fmt.Errorf("读取配置失败: %w", err)
 	}
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{}) // 这里改为mysql.Open
 	if err != nil {
 		return fmt.Errorf("数据库连接失败: %w", err)
 	}
 	// 自动迁移
-	if err := DB.AutoMigrate(&Comment{}, &User{}); err != nil {
+	if err := DB.AutoMigrate(&Comment{}); err != nil {
 		return fmt.Errorf("数据库迁移失败: %w", err)
 	}
 	fmt.Println("数据库连接成功")

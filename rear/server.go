@@ -3,10 +3,9 @@ package main
 import (
     "encoding/json"
     "io"
-    "log"
     "net/http"
     "strconv"
-    "sync"
+
     "fresher-project/rear/db"
 )
 
@@ -17,23 +16,15 @@ type Resp struct {
     Data interface{} `json:"data"`
 }
 
-// 评论结构体
-type Comment struct {
-    ID      int    `json:"id"`
-    Name    string `json:"name"`
-    Content string `json:"content"`
-}
-
-// 评论列表和互斥锁
-var (
-    comments   = make([]Comment, 0)
-    commentsMu sync.Mutex
-    nextID     = 1
-)
-
 // 获取评论处理函数
 func GetComments(w http.ResponseWriter, r *http.Request) {
-    // 解析分页参数
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    if r.Method == "OPTIONS" {
+        w.WriteHeader(http.StatusOK)
+       return
+    }
     pageStr := r.URL.Query().Get("page")
     sizeStr := r.URL.Query().Get("size")
     page, _ := strconv.Atoi(pageStr)
@@ -41,35 +32,27 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
     if page < 1 {
         page = 1
     }
-
-    commentsMu.Lock()
-    defer commentsMu.Unlock()
-
-    total := len(comments)
-    var result []Comment
-
-    // size=-1 返回所有评论
-    if size == -1 {
-        result = comments
-    } else {
-        start := (page - 1) * size
-        end := start + size
-        if start > total {
-            result = []Comment{}
-        } else {
-            if end > total {
-                end = total
-            }
-            result = comments[start:end]
-        }
+    if size < 1 && size != -1 {
+        size = 10
     }
+
+    var comments []db.Comment
+    var total int64
+    db.DB.Model(&db.Comment{}).Count(&total)
+
+    query := db.DB.Order("id asc")
+    if size != -1 {
+        offset := (page - 1) * size
+        query = query.Offset(offset).Limit(size)
+    }
+    query.Find(&comments)
 
     resp := Resp{
         Code: 0,
         Msg:  "success",
         Data: map[string]interface{}{
             "total":    total,
-            "comments": result,
+            "comments": comments,
         },
     }
     w.Header().Set("Content-Type", "application/json")
@@ -78,6 +61,13 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 
 // 添加评论处理函数
 func AddComment(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    if r.Method == "OPTIONS" {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
     var req struct {
         Name    string `json:"name"`
         Content string `json:"content"`
@@ -95,15 +85,16 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    commentsMu.Lock()
-    comment := Comment{
-        ID:      nextID,
+    comment := db.Comment{
         Name:    req.Name,
         Content: req.Content,
     }
-    nextID++
-    comments = append(comments, comment)
-    commentsMu.Unlock()
+    if err := db.DB.Create(&comment).Error; err != nil {
+        resp := Resp{Code: 2, Msg: "数据库写入失败", Data: nil}
+        w.Header().Set("Content-Type", "application/json")
+        json.NewEncoder(w).Encode(resp)
+        return
+    }
 
     resp := Resp{
         Code: 0,
@@ -116,6 +107,14 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 
 // 删除评论处理函数
 func DeleteComment(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    if r.Method == "OPTIONS" {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
+
     idStr := r.URL.Query().Get("id")
     id, err := strconv.Atoi(idStr)
     if err != nil {
@@ -125,40 +124,16 @@ func DeleteComment(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    commentsMu.Lock()
-    defer commentsMu.Unlock()
-    idx := -1
-    for i, c := range comments {
-        if c.ID == id {
-            idx = i
-            break
-        }
-    }
-    if idx == -1 {
-        resp := Resp{Code: 2, Msg: "评论不存在", Data: nil}
+    if err := db.DB.Delete(&db.Comment{}, id).Error; err != nil {
+        resp := Resp{Code: 2, Msg: "数据库删除失败", Data: nil}
         w.Header().Set("Content-Type", "application/json")
         json.NewEncoder(w).Encode(resp)
         return
     }
-    // 删除评论
-    comments = append(comments[:idx], comments[idx+1:]...)
 
     resp := Resp{Code: 0, Msg: "success", Data: nil}
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(resp)
 }
 
-func main() {
-    if err := db.InitDB(); err != nil {
-        log.Fatal(err)
-    }
-    http.HandleFunc("/comment/get", GetComments)
-    http.HandleFunc("/comment/add", AddComment)
-    http.HandleFunc("/comment/delete", DeleteComment)
-    http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-        io.WriteString(w, "pong~")
-    })
-    log.Println("Server running at http://localhost:8080/")
-    http.ListenAndServe(":8080", nil)
-}
 

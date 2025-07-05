@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -19,6 +18,6 @@ func main() {
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "pong~")
 	})
-	log.Println("Server running at http://localhost:8080/")
+	log.Println("Server running at http://localhost:****/")
 	http.ListenAndServe(":8080", nil)
 }

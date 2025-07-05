@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutBtn = document.getElementById('logout-btn');
     const commentForm = document.getElementById('comment-form');
     const commentInput = document.getElementById('comment-input');
+    const charCount = document.getElementById('char-count');
+    const maxLen = commentInput.getAttribute('maxlength') || 800;
     const commentList = document.getElementById('comment-list');
 
     let currentUser = localStorage.getItem('username') || '';
@@ -126,5 +128,15 @@ document.addEventListener('DOMContentLoaded', function() {
         updateUI();
     });
 
+    // 字数统计
+    commentInput.addEventListener('input', function() {
+        charCount.textContent = `${commentInput.value.length}/${maxLen}`;
+    });
+
+    // 初始化显示
+    charCount.textContent = `${commentInput.value.length}/${maxLen}`;
+
     updateUI();
 });
+
+console.log('main.js loaded');
